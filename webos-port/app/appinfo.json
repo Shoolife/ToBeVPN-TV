@@ -1,0 +1,15 @@
+{
+  "id": "com.tobevpn.app",
+  "version": "1.0.35",
+  "vendor": "ToBeVPN",
+  "type": "web",
+  "main": "index.html",
+  "title": "ToBeVPN",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "bgColor": "#101012",
+  "transparent": false,
+  "disableBackHistoryAPI": true,
+  "requiredMemory": 32,
+  "requiredACG": []
+}

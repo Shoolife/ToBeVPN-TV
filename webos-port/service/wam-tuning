@@ -1,0 +1,57 @@
+#!/bin/sh
+
+# WebAppMgr tuning for ToBeVPN on an LG webOS 3.9 TV (Homebrew Channel init.d).
+#
+# /etc/init/WebAppMgr.conf sources /etc/wam/plugins/conf.sh after it has
+# assembled WAM_SWITCHES. A writable copy of that file is bind-mounted over the
+# read-only one and edits the switches LG chose for 1 GB devices:
+#   --enable-aggressive-release-policy and
+#   --max-unused-resource-memory-usage-percentage=0
+#       drop the painted tiles of every hidden page, so each screen change
+#       re-rasterises the whole 1920x1080 page;
+#   --disable-v8-crankshaft
+#       turns off V8's optimising JIT;
+#   --num-raster-threads=2 on a quad-core CPU; 20 MB Skia image cache.
+#
+# Nothing on the system partition changes. To undo: delete this file and
+# reboot, or create /var/lib/webosbrew/wam-tuning.disable and reboot.
+
+export PATH=/usr/bin:/usr/sbin:/bin:/sbin
+
+ORIGINAL=/etc/wam/plugins/conf.sh
+COPY_DIR=/tmp/wam-tuning
+MARKER=--num-raster-threads=4
+
+[ -e /var/lib/webosbrew/wam-tuning.disable ] && exit 0
+[ -f "$ORIGINAL" ] || exit 0
+
+if ! grep -q '^# wam-tuning begin$' "$ORIGINAL"; then
+    mkdir -p "$COPY_DIR"
+    cp "$ORIGINAL" "$COPY_DIR/conf.sh"
+    cat >> "$COPY_DIR/conf.sh" <<'EOF'
+# wam-tuning begin
+WAM_SWITCHES=$(echo "$WAM_SWITCHES" | sed \
+    -e 's/--enable-aggressive-release-policy//' \
+    -e 's/--max-unused-resource-memory-usage-percentage=0//' \
+    -e 's/--disable-v8-crankshaft//' \
+    -e 's/--num-raster-threads=[0-9]*/--num-raster-threads=4/')
+WAM_EXTRA_SKIA_CACHE_SWITCHES=$(echo "$WAM_EXTRA_SKIA_CACHE_SWITCHES" | sed \
+    -e 's/--skia-font-cache-size-mb=[0-9]*/--skia-font-cache-size-mb=8/' \
+    -e 's/--skia-image-cache-size-mb=[0-9]*/--skia-image-cache-size-mb=40/')
+export WAM_SWITCHES WAM_EXTRA_SKIA_CACHE_SWITCHES
+# wam-tuning end
+EOF
+    chmod 644 "$COPY_DIR/conf.sh"
+    mount --bind "$COPY_DIR/conf.sh" "$ORIGINAL" || exit 0
+fi
+
+# WAM may already be running with LG's switches when this hook runs. The
+# browser process is the one without --type=.
+for pid in $(pidof WebAppMgr 2>/dev/null); do
+    cmd=$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)
+    case "$cmd" in *--type=*) continue ;; esac
+    case "$cmd" in *"$MARKER"*) ;; *) restart WebAppMgr >/dev/null 2>&1 ;; esac
+    break
+done
+
+exit 0

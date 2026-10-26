@@ -1,0 +1,11 @@
+# Native binaries packed into the webOS IPK. Not stored in git: CI and
+# local builds fetch them with scripts/fetch-vendor.sh, which checks every
+# file against the sha256 below (the digests GitHub publishes for these
+# release assets).
+xray_version=v26.10.21
+xray_url=https://github.com/XTLS/Xray-core/releases/download/v26.10.21/Xray-linux-arm32-v7a.zip
+xray_zip_sha256=89978508fa2ebb4a1e661f2c6ed51d241c4091b3cd17f4c65fdf20baae7dedac
+xray_sha256=8a61913315449f3eca8ba0e8e7e4a3c36d764f42f8b7ebd62df7ea60de6d5d05
+tunnel_version=2.19.2
+tunnel_url=https://github.com/heiher/hev-socks5-tunnel/releases/download/2.19.2/hev-socks5-tunnel-linux-arm32hf
+tunnel_sha256=e79dce9615cf71c19dcc5d4930c34576169575ea4c33b3823d68f90eea176106

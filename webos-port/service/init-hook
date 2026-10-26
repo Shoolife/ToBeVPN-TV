@@ -1,0 +1,6 @@
+#!/bin/sh
+BASE=/media/developer/tobevpn
+[ -x "$BASE/service/start.sh" ] || exit 0
+"$BASE/service/stop.sh" >/dev/null 2>&1 || true
+nohup "$BASE/service/start.sh" >/dev/null 2>&1 &
+exit 0

@@ -141,8 +141,59 @@ jobs:
         run: |
           rm -f tobevpn-release.jks local.properties
 
+  webos:
+    # LG webOS build of the same release: one IPK for rooted TVs with
+    # Homebrew Channel. The TV's in-app updater looks for a *webos*.ipk
+    # asset on the newest v*-tv release, so it ships under the same tag.
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: webos-port
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install webOS CLI
+        run: npm install -g @webos-tools/cli@3.2.6
+
+      - name: Check tag matches the webOS version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VERSION=$(sed -n "s/^var APP_VERSION = .* '\([0-9][^']*\)';/\1/p" service/tobevpn_service.js)
+          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match webOS APP_VERSION $VERSION"
+            exit 1
+          fi
+
+      - name: Service tests
+        run: node tests/test_service.js
+
+      - name: Build IPK
+        # build.sh fetches Xray and hev-socks5-tunnel from their official
+        # releases, verifies them against vendor/vendor.lock, and checks the
+        # webOS version against the Android TV versionName.
+        env:
+          BOT_API_URL: ${{ secrets.BOT_API_URL }}
+        run: |
+          if [ -z "$BOT_API_URL" ]; then
+            echo "::error::BOT_API_URL secret is missing"
+            exit 1
+          fi
+          scripts/build.sh
+          ls -la dist/*.ipk
+
+      - name: Upload IPK
+        uses: actions/upload-artifact@v5
+        with:
+          name: ToBeVPN-TV-webos-ipk
+          path: webos-port/dist/ToBeVPN-TV-*-webos.ipk
+          if-no-files-found: error
+
   release:
-    needs: build
+    needs: [build, webos]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-22.04
     permissions:
@@ -158,4 +209,5 @@ jobs:
           files: |
             dist/ToBeVPN-TV-apk/*.apk
             dist/ToBeVPN-TV-GooglePlay-aab/*.aab
+            dist/ToBeVPN-TV-webos-ipk/*.ipk
           generate_release_notes: true

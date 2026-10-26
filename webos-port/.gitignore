@@ -1,0 +1,7 @@
+dist/
+__pycache__/
+*.pyc
+# Fetched and verified by scripts/fetch-vendor.sh (see vendor/vendor.lock).
+vendor/xray
+vendor/Xray-linux-arm32-v7a.zip
+vendor/hev-socks5-tunnel-linux-arm32hf
