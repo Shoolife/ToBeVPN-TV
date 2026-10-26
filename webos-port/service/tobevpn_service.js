@@ -29,7 +29,7 @@ var SPEED_HISTORY_FILE = STATE + '/speed_history.json';
 var TRAFFIC_LOG_FILE = STATE + '/traffic_log.json';
 var PROBE_TARGETS = ['https://www.gstatic.com/generate_204', 'https://cp.cloudflare.com/generate_204'];
 var APP_VERSION = process.env.TOBEVPN_APP_VERSION || '1.0.35-tv';
-var UPDATE_REPO = 'Shoolife/ToBeVPN-Android-TV';
+var UPDATE_REPO = 'Shoolife/ToBeVPN-TV';
 // Test hook: a releases JSON served elsewhere instead of the GitHub API.
 var UPDATE_API = process.env.TOBEVPN_UPDATE_API || 'https://api.github.com/repos/' + UPDATE_REPO + '/releases';
 var UPDATE_FILE = '/tmp/tobevpn-update.ipk';

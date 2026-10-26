@@ -2,11 +2,11 @@
 
 <img src="play_assets/play_icon_512_transparent.png" alt="ToBeVPN TV" width="160" height="160" />
 
-# ToBeVPN for Android TV
+# ToBeVPN TV
 
-**VPN-клиент для Android TV с подпиской, выбором серверов и встроенными обновлениями — управление пультом.**
+**VPN-клиент для Android TV и LG webOS с подпиской, выбором серверов и встроенными обновлениями — управление пультом.**
 
-[![Latest Release](https://img.shields.io/github/v/release/Shoolife/ToBeVPN-Android-TV?display_name=tag&sort=date&color=4CAF50&label=release)](https://github.com/Shoolife/ToBeVPN-Android-TV/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/Shoolife/ToBeVPN-TV?display_name=tag&sort=date&color=4CAF50&label=release)](https://github.com/Shoolife/ToBeVPN-TV/releases/latest)
 [![Android TV](https://img.shields.io/badge/Android%20TV-9%2B-3A8DFF?logo=androidtv&logoColor=white)](#)
 
 </div>
@@ -16,6 +16,8 @@
 ## Что это
 
 ToBeVPN TV — нативный клиент к VPN-сети для телевизоров и приставок на Android TV. Защищённое подключение, управление подпиской, привязка устройства через QR, выбор серверов с пингом и встроенный обновлятор — всё это в leanback-интерфейсе, полностью управляемом с пульта (D-pad).
+
+Для телевизоров LG на webOS с root-доступом (Homebrew Channel) есть отдельная версия в [`webos-port/`](webos-port/). Обе выходят под одним тегом `v*-tv`: в релизе лежат APK и AAB для Android TV и `ToBeVPN-TV-<версия>-webos.ipk` для LG.
 
 ## Главное
 

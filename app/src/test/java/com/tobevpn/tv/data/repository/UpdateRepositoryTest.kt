@@ -104,7 +104,7 @@ class UpdateRepositoryTest {
         tagName = tagName,
         name = tagName,
         body = "",
-        htmlUrl = "https://github.com/Shoolife/ToBeVPN-Android-TV/releases/tag/$tagName",
+        htmlUrl = "https://github.com/Shoolife/ToBeVPN-TV/releases/tag/$tagName",
         draft = draft,
         prerelease = prerelease,
         assets = assets,
@@ -112,7 +112,7 @@ class UpdateRepositoryTest {
 
     private fun asset(name: String): GithubAssetDto = GithubAssetDto(
         name = name,
-        downloadUrl = "https://github.com/Shoolife/ToBeVPN-Android-TV/releases/download/test/$name",
+        downloadUrl = "https://github.com/Shoolife/ToBeVPN-TV/releases/download/test/$name",
         size = 1L,
         contentType = "application/vnd.android.package-archive",
     )

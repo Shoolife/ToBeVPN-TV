@@ -126,7 +126,7 @@ class UpdateRepository @Inject constructor(
     private companion object {
         const val TAG = "UpdateRepository"
         const val GITHUB_OWNER = "Shoolife"
-        const val GITHUB_REPO = "ToBeVPN-Android-TV"
+        const val GITHUB_REPO = "ToBeVPN-TV"
 
         const val PREFS_NAME = "tobevpn_update_cache"
         const val KEY_CACHED_AT = "cached_at"
