@@ -28,7 +28,7 @@ var PROBE_CONFIG = STATE + '/probe.json';
 var SPEED_HISTORY_FILE = STATE + '/speed_history.json';
 var TRAFFIC_LOG_FILE = STATE + '/traffic_log.json';
 var PROBE_TARGETS = ['https://www.gstatic.com/generate_204', 'https://cp.cloudflare.com/generate_204'];
-var APP_VERSION = process.env.TOBEVPN_APP_VERSION || '1.0.35-tv';
+var APP_VERSION = process.env.TOBEVPN_APP_VERSION || '1.0.36-tv';
 var UPDATE_REPO = 'Shoolife/ToBeVPN-TV';
 // Test hook: a releases JSON served elsewhere instead of the GitHub API.
 var UPDATE_API = process.env.TOBEVPN_UPDATE_API || 'https://api.github.com/repos/' + UPDATE_REPO + '/releases';
@@ -109,6 +109,19 @@ function decoded(value) {
   catch (ignore) { return String(value || ''); }
 }
 
+// The fm= value (Xray finalmask, the v2rayN share format) as compact JSON
+// when it is a non-empty object, else '': a malformed finalmask would make
+// Xray reject the whole config (VlessUrlParser.normalizeFinalMask).
+function finalMaskParam(query) {
+  var text = first(query, 'fm').trim();
+  if (!text || text.length > 16384) { return ''; }
+  try {
+    var value = JSON.parse(text);
+    if (!value || typeof value !== 'object' || Array.isArray(value) || !Object.keys(value).length) { return ''; }
+    return JSON.stringify(value);
+  } catch (ignore) { return ''; }
+}
+
 function parseServer(link) {
   var parsed = url.parse(link, true);
   var scheme = String(parsed.protocol || '').toLowerCase();
@@ -127,7 +140,8 @@ function parseServer(link) {
       short_id: first(parsed.query, 'sid'), network: networkName(first(parsed.query, 'type')),
       path: first(parsed.query, 'path'), host: first(parsed.query, 'host'), alpn: first(parsed.query, 'alpn'),
       header_type: first(parsed.query, 'headerType').toLowerCase(), service_name: first(parsed.query, 'serviceName'),
-      extra: extra, mode: first(parsed.query, 'mode').toLowerCase(), spx: first(parsed.query, 'spx'), link: link
+      extra: extra, mode: first(parsed.query, 'mode').toLowerCase(), spx: first(parsed.query, 'spx'),
+      final_mask: finalMaskParam(parsed.query), link: link
     };
   }
   if (scheme === 'hysteria2:' || scheme === 'hy2:') {
@@ -139,7 +153,8 @@ function parseServer(link) {
       address: parsed.hostname, port: parseInt(parsed.port || '443', 10), uuid: decoded(parsed.auth),
       sni: first(parsed.query, 'sni'), alpn: first(parsed.query, 'alpn', 'h3') || 'h3',
       obfs_password: obfs === '' || obfs === 'salamander' ? first(parsed.query, 'obfs-password') : '',
-      pin_sha256: pin, port_hopping: first(parsed.query, 'mport'), ech: first(parsed.query, 'ech'), link: link
+      pin_sha256: pin, port_hopping: first(parsed.query, 'mport'), ech: first(parsed.query, 'ech'),
+      final_mask: finalMaskParam(parsed.query), link: link
     };
   }
   throw new Error('Неподдерживаемый протокол сервера');
@@ -173,10 +188,14 @@ function buildXrayConfig(server, addressIp) {
     var masks = [];
     if (server.port_hopping) { masks.push({ type: 'udphop', settings: { mode: 'intervalRemote', remotePorts: server.port_hopping } }); }
     if (server.obfs_password) { masks.push({ type: 'salamander', settings: { password: server.obfs_password } }); }
-    if (masks.length) { hysteria.finalmask = { udp: masks }; }
+    var hyStream = { network: 'hysteria', security: 'tls', tlsSettings: tls, hysteriaSettings: hysteria };
+    // Xray reads the UDP masks from streamSettings.finalmask, as in
+    // VpnConfig.kt; inside hysteriaSettings they were ignored, so salamander
+    // and port hopping never took effect.
+    if (masks.length) { hyStream.finalmask = { udp: masks }; }
     proxy = {
       tag: 'proxy', protocol: 'hysteria', settings: { version: 2, address: addressIp, port: server.port },
-      streamSettings: { network: 'hysteria', security: 'tls', tlsSettings: tls, hysteriaSettings: hysteria }
+      streamSettings: hyStream
     };
   } else {
     var stream = { network: server.network, security: server.security };
@@ -225,6 +244,11 @@ function buildXrayConfig(server, addressIp) {
       settings: { vnext: [{ address: addressIp, port: server.port, users: [user] }] }, streamSettings: stream
     };
     if (server.network !== 'xhttp') { proxy.mux = { enabled: false, concurrency: -1 }; }
+  }
+  // The link's own finalmask (fm=) replaces whatever was built above, the
+  // way v2rayN applies it: the server published the masks it expects.
+  if (server.final_mask) {
+    try { proxy.streamSettings.finalmask = JSON.parse(server.final_mask); } catch (ignore) {}
   }
   return {
     log: { loglevel: 'warning' }, inbounds: [inbound],
@@ -1302,7 +1326,7 @@ Controller.prototype.refreshProfile = function () {
   var headers = {
     'x-hwid': this.session.device_id || '', 'x-device-os': 'Android TV',
     'x-ver-os': this.config.webos_version || '3.9', 'x-device-model': this.config.device_model || 'LG TV',
-    'User-Agent': this.config.user_agent || 'ToBeVPN/1.0.35/webos/1'
+    'User-Agent': 'ToBeVPN/' + APP_VERSION.split('-')[0] + '/webos/1'
   };
   var headerFile = STATE + '/profile.headers';
   var response = this.curl('GET', target, null, null, headers, 20, headerFile);
@@ -1492,7 +1516,7 @@ Controller.prototype.publicStatus = function () {
     session_bytes: tx + rx,
     session_seconds: connected && this.connectedSince ? Math.floor((Date.now() - this.connectedSince) / 1000) : 0,
     account: account,
-    versions: { app: APP_VERSION, xray: '26.10.21', tunnel: '2.19.2' }
+    versions: { app: APP_VERSION, xray: '26.10.29', tunnel: '2.19.2' }
   };
 };
 

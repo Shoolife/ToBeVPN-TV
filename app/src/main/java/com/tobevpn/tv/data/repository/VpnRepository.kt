@@ -337,6 +337,7 @@ class VpnRepository @Inject constructor(
         pinSha256 = pinSha256,
         portHopping = portHopping,
         echConfigList = echConfigList,
+        finalMask = finalMask,
         country = country,
         isOnline = isOnline,
         sortOrder = sortOrder,
@@ -368,6 +369,7 @@ class VpnRepository @Inject constructor(
         pinSha256 = pinSha256,
         portHopping = portHopping,
         echConfigList = echConfigList,
+        finalMask = finalMask,
         country = country,
         isOnline = isOnline,
     )

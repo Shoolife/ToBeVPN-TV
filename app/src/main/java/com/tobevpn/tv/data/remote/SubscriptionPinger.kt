@@ -8,6 +8,7 @@ import com.tobevpn.tv.data.device.DeviceFingerprintProvider
 import com.tobevpn.tv.util.SafeDiagnostics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -461,16 +462,19 @@ class SubscriptionPinger @Inject constructor(
         val fallbackBase = BuildConfig.FALLBACK_SUBS_DOMAIN
         val key = rawKey?.trim()?.takeIf { it.isNotBlank() } ?: return null
         if (fallbackBase.isBlank()) return null
-        val rebuilt = try {
-            (fallbackBase + key).toHttpUrl()
-        } catch (_: IllegalArgumentException) {
+        // One extension per built request (both branches below share it);
+        // a retry of that request keeps its URL.
+        val rebuilt = buildSubscriptionUrlByKey(resolveFallbackExtension(fallbackBase), key) ?: return null
+        // The fallback CDN answers 403 to a UUID in x-hwid; it gets the same
+        // id as x-device-ref, which its proxy turns back into x-hwid for
+        // Remnawave. A device id that is not a UUID is not replaced by a
+        // made-up one, and the fallback is not sent without an id.
+        val deviceRef = encodeFallbackDeviceRef(deviceId) ?: run {
+            SafeDiagnostics.warn(TAG, "Fallback device reference cannot be encoded")
             return null
         }
-        return template
-            ?.newBuilder()
-            ?.url(rebuilt)
-            ?.build()
-            ?: buildBaseRequest(rebuilt.toString(), deviceId)
+        val source = template ?: buildBaseRequest(rebuilt.toString(), deviceId) ?: return null
+        return asFallbackRequest(source, rebuilt, deviceRef)
     }
 
     private fun logFailure(stage: String, e: IOException) {
@@ -505,3 +509,79 @@ class SubscriptionPinger @Inject constructor(
         val totalBytes: Long?,
     )
 }
+
+/**
+ * The fallback subscription URL for [key], same rules as the phone: a
+ * "{key}" (or "{sub}") placeholder anywhere in [base]
+ * ("https://cdn.example/api/sub/{key}"); otherwise the "sub" or "key" query
+ * parameter ("https://fn.example/?sub="), or the key as the last path
+ * segment.
+ */
+internal fun buildSubscriptionUrlByKey(base: String, key: String): HttpUrl? {
+    val substituted = when {
+        base.contains("{key}") -> base.replace("{key}", key)
+        base.contains("{sub}") -> base.replace("{sub}", key)
+        else -> null
+    }
+    if (substituted != null) {
+        return runCatching { substituted.toHttpUrl() }.getOrNull()
+    }
+
+    val url = runCatching { base.toHttpUrl() }.getOrNull() ?: return null
+    val builder = url.newBuilder()
+    return if (url.query != null) {
+        when {
+            "sub" in url.queryParameterNames -> builder.setQueryParameter("sub", key)
+            "key" in url.queryParameterNames -> builder.setQueryParameter("key", key)
+            else -> builder.addQueryParameter("sub", key)
+        }.build()
+    } else {
+        builder.addPathSegment(key).build()
+    }
+}
+
+/**
+ * Extensions the fallback CDN serves the subscription under (each checked
+ * against the live service); the proxy strips it to find the key.
+ */
+internal val FALLBACK_SUBS_EXTENSIONS = listOf(
+    "txt", "json", "css", "js", "html",
+    "xml", "svg", "png", "jpg", "woff2",
+)
+
+/**
+ * [base] with its "{ext}" replaced by one extension from
+ * [FALLBACK_SUBS_EXTENSIONS], picked at random; a template without "{ext}"
+ * is returned as is (no extension is added to it).
+ */
+internal fun resolveFallbackExtension(
+    base: String,
+    pick: () -> String = { FALLBACK_SUBS_EXTENSIONS.random() },
+): String = if (base.contains("{ext}")) base.replace("{ext}", pick()) else base
+
+private val DEVICE_UUID_REGEX = Regex(
+    "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+)
+
+/**
+ * The device id as the fallback proxy expects it: "u1." and the same UUID
+ * without dashes, case kept ("u1.550e8400e29b41d4a716446655440000"); the
+ * proxy restores the dashes. Null when [deviceId] is not a UUID.
+ */
+internal fun encodeFallbackDeviceRef(deviceId: String): String? {
+    if (!DEVICE_UUID_REGEX.matches(deviceId)) return null
+    return "u1." + deviceId.replace("-", "")
+}
+
+/**
+ * [source] (a primary request, or one built for the fallback URL) sent to
+ * [url] with x-device-ref instead of x-hwid; every other header is kept and
+ * [source] itself is left unchanged for a later primary retry.
+ */
+internal fun asFallbackRequest(source: Request, url: HttpUrl, deviceRef: String): Request =
+    source.newBuilder()
+        .url(url)
+        .removeHeader("x-hwid")
+        .removeHeader("x-device-ref")
+        .header("x-device-ref", deviceRef)
+        .build()

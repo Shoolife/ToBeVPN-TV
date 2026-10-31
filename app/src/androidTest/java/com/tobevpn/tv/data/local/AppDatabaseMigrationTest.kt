@@ -179,6 +179,24 @@ class AppDatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun migration14To15AddsFinalMask() {
+        helper.createDatabase(TEST_DATABASE, 14).use(::insertVersion10Server)
+        helper.runMigrationsAndValidate(
+            TEST_DATABASE,
+            15,
+            true,
+            DatabaseModule.MIGRATION_14_15,
+        ).use { database ->
+            database.query("SELECT id, finalMask FROM servers").use { cursor ->
+                assertEquals(1, cursor.count)
+                cursor.moveToFirst()
+                assertEquals("server-id", cursor.getString(cursor.getColumnIndexOrThrow("id")))
+                assertEquals("", cursor.getString(cursor.getColumnIndexOrThrow("finalMask")))
+            }
+        }
+    }
+
     private fun insertVersion12Session(
         database: SupportSQLiteDatabase,
         deviceId: String,

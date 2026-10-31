@@ -1,6 +1,7 @@
 package com.tobevpn.tv.di
 
 import com.tobevpn.tv.BuildConfig
+import com.tobevpn.tv.data.device.AppUserAgent
 import com.tobevpn.tv.data.remote.AuthHeaderInterceptor
 import com.tobevpn.tv.data.remote.BootstrapApi
 import com.tobevpn.tv.data.remote.BotApi
@@ -24,7 +25,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private val userAgent = "ToBeVPN/${BuildConfig.VERSION_NAME}/androidtv/${BuildConfig.VERSION_CODE}"
+    private val userAgent = AppUserAgent.value
 
     private val loggingInterceptor
         get() = HttpLoggingInterceptor().apply {

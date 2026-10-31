@@ -21,6 +21,25 @@ var hyConfig = service.buildXrayConfig(hy, '203.0.113.8');
 assert.equal(hyConfig.outbounds[0].protocol, 'hysteria');
 assert.equal(hyConfig.outbounds[0].streamSettings.hysteriaSettings.auth, 'secret');
 
+// Hysteria2 UDP masks belong to streamSettings.finalmask (Xray StreamConfig).
+assert.equal(hyConfig.outbounds[0].streamSettings.finalmask.udp[0].type, 'salamander');
+assert.equal(hyConfig.outbounds[0].streamSettings.hysteriaSettings.finalmask, undefined);
+
+// fm= (v2rayN finalmask share format) replaces the built finalmask.
+var mask = { tcp: [{ type: 'fragment', settings: { packets: 'tlshello', length: '100-200' } }] };
+var masked = service.parseServer(link.replace('#Moscow', '&fm=' + encodeURIComponent(JSON.stringify(mask)) + '#Moscow'));
+assert.deepEqual(JSON.parse(masked.final_mask), mask);
+assert.deepEqual(service.buildXrayConfig(masked, '203.0.113.4').outbounds[0].streamSettings.finalmask, mask);
+assert.equal(service.buildXrayConfig(server, '203.0.113.4').outbounds[0].streamSettings.finalmask, undefined);
+['not-json', encodeURIComponent('[1]'), encodeURIComponent('{}')].forEach(function (value) {
+  assert.equal(service.parseServer(link.replace('#Moscow', '&fm=' + value + '#Moscow')).final_mask, '');
+});
+var hyMasked = service.parseServer('hysteria2://secret@example.com:443?obfs=salamander&obfs-password=cat&fm=' +
+  encodeURIComponent(JSON.stringify({ udp: [{ type: 'salamander', settings: { password: 'from-fm' } }] })) + '#Fm');
+var hyMaskedStream = service.buildXrayConfig(hyMasked, '203.0.113.8').outbounds[0].streamSettings;
+assert.equal(hyMaskedStream.finalmask.udp.length, 1);
+assert.equal(hyMaskedStream.finalmask.udp[0].settings.password, 'from-fm');
+
 console.log('Node service tests passed');
 
 // Every method the service calls on its objects must be defined: a lost

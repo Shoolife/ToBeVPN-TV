@@ -1532,7 +1532,7 @@
   function fitText(el, max, min) { var size = max; el.style.fontSize = size + 'px'; while (size > min && el.scrollWidth > el.clientWidth + 1) { size -= 1; el.style.fontSize = size + 'px'; } }
 
   /* WhatsNewDialog.kt: the 1.0.35 highlights of the Android TV build. */
-  var whatsNew = [['i-gift', 'whats_new_referral_rewards_v1035'], ['i-route', 'whats_new_hysteria2_v1035'], ['i-grid', 'whats_new_server_grid_v1035'], ['i-memory', 'whats_new_xray_core_v1035']];
+  var whatsNew = [['i-route', 'whats_new_final_mask_v1036'], ['i-memory', 'whats_new_xray_core_v1036']];
   function showWhatsNew() {
     var items = ''; var i;
     for (i = 0; i < whatsNew.length; i += 1) { items += '<div class="wn-item"><span class="wn-item-icon"><svg><use xlink:href="#' + whatsNew[i][0] + '"></use></svg></span><span class="wn-item-copy"><b>' + escapeHtml(t(whatsNew[i][1] + '_title')) + '</b><span>' + escapeHtml(t(whatsNew[i][1] + '_desc')) + '</span></span></div>'; }

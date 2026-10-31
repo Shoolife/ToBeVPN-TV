@@ -3,7 +3,6 @@ package com.tobevpn.tv.data.device
 import android.content.Context
 import android.os.Build
 import android.provider.Settings
-import com.tobevpn.tv.BuildConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -13,7 +12,7 @@ data class DeviceFingerprint(
     val platform: String,    // "Android TV"
     val osVersion: String,   // Build.VERSION.RELEASE — "16"
     val model: String,       // Build.MANUFACTURER + " " + Build.MODEL
-    val userAgent: String,   // "ToBeVPN/<versionName>/androidtv/<versionCode>"
+    val userAgent: String,   // AppUserAgent.value
 )
 
 @Singleton
@@ -25,7 +24,7 @@ class DeviceFingerprintProvider @Inject constructor(
         platform = "Android TV",
         osVersion = Build.VERSION.RELEASE.orEmpty(),
         model = composeModel(),
-        userAgent = "ToBeVPN/${BuildConfig.VERSION_NAME}/androidtv/${BuildConfig.VERSION_CODE}",
+        userAgent = AppUserAgent.value,
     )
 
     private fun composeModel(): String {

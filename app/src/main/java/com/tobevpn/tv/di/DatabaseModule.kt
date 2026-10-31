@@ -46,6 +46,7 @@ object DatabaseModule {
                 MIGRATION_11_12,
                 MIGRATION_12_13,
                 MIGRATION_13_14,
+                MIGRATION_14_15,
             )
             .fallbackToDestructiveMigration(dropAllTables = false)
             // Usage is updated while the tunnel is active. Keep committed
@@ -131,6 +132,13 @@ object DatabaseModule {
             db.execSQL("ALTER TABLE servers ADD COLUMN pinSha256 TEXT NOT NULL DEFAULT ''")
             db.execSQL("ALTER TABLE servers ADD COLUMN portHopping TEXT NOT NULL DEFAULT ''")
             db.execSQL("ALTER TABLE servers ADD COLUMN echConfigList TEXT NOT NULL DEFAULT ''")
+        }
+    }
+
+    // v14 -> v15: the link's finalmask (fm=).
+    internal val MIGRATION_14_15 = object : Migration(14, 15) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE servers ADD COLUMN finalMask TEXT NOT NULL DEFAULT ''")
         }
     }
 

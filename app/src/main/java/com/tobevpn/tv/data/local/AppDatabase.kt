@@ -21,7 +21,7 @@ import com.tobevpn.tv.data.local.entity.UsageEntity
         TrafficLogEntity::class,
         PendingPromocodeActivationEntity::class,
     ],
-    version = 14,
+    version = 15,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
