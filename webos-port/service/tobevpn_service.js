@@ -1516,7 +1516,7 @@ Controller.prototype.publicStatus = function () {
     session_bytes: tx + rx,
     session_seconds: connected && this.connectedSince ? Math.floor((Date.now() - this.connectedSince) / 1000) : 0,
     account: account,
-    versions: { app: APP_VERSION, xray: '26.10.29', tunnel: '2.19.2' }
+    versions: { app: APP_VERSION, xray: '26.11.9', tunnel: '2.19.2' }
   };
 };
 

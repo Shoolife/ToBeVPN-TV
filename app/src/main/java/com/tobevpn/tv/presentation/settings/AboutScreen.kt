@@ -1,5 +1,6 @@
 package com.tobevpn.tv.presentation.settings
 
+import com.tobevpn.tv.billing.regionLocale
 import java.util.Locale
 import androidx.compose.ui.platform.LocalConfiguration
 import com.tobevpn.tv.billing.PlayBillingStatus
@@ -691,7 +692,7 @@ private fun PlayBillingDiagnosticsCard(
     val countryText = status.country
         ?.takeIf { it.isNotBlank() }
         ?.let { code ->
-            val name = Locale("", code).getDisplayCountry(locale)
+            val name = regionLocale(code)?.getDisplayCountry(locale).orEmpty()
             if (name.isBlank() || name.equals(code, ignoreCase = true)) code else "$code · $name"
         }
         ?: notAvailable

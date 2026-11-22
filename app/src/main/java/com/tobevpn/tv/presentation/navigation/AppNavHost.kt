@@ -119,6 +119,18 @@ fun AppNavHost(
                 AnimatedContentTransitionScope.SlideDirection.End, slideAnim,
             )
         },
+        // Navigation 2.10 gave the predictive back its own animation (the
+        // leaving screen shrinks). Keep the one every way back had before.
+        predictivePopEnterTransition = {
+            fadeIn(navAnim) + slideIntoContainer(
+                AnimatedContentTransitionScope.SlideDirection.End, slideAnim,
+            )
+        },
+        predictivePopExitTransition = {
+            fadeOut(navAnim) + slideOutOfContainer(
+                AnimatedContentTransitionScope.SlideDirection.End, slideAnim,
+            )
+        },
     ) {
         composable<OnboardingRoute> {
             OnboardingScreen(

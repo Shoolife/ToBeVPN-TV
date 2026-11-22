@@ -2,10 +2,10 @@
 # local builds fetch them with scripts/fetch-vendor.sh, which checks every
 # file against the sha256 below (the digests GitHub publishes for these
 # release assets).
-xray_version=v26.10.29
-xray_url=https://github.com/XTLS/Xray-core/releases/download/v26.10.29/Xray-linux-arm32-v7a.zip
-xray_zip_sha256=263fa7325c63b3a7f7316405f561e7c790b44c1461992ea648007f0374e9bdf4
-xray_sha256=d3227135e21a6be74a17cb903c1a2ac1428e25bda814b94f26f3bff2228be466
+xray_version=v26.11.9
+xray_url=https://github.com/XTLS/Xray-core/releases/download/v26.11.9/Xray-linux-arm32-v7a.zip
+xray_zip_sha256=19c51e08a6562705fb1cb032a84fd87df21d7e27b194f035be7e754dbe3a97b3
+xray_sha256=71ee3e29e884f7ed4bce2c1b28851db2bcf38306addc72edfbb8ec02e203caea
 tunnel_version=2.19.2
 tunnel_url=https://github.com/heiher/hev-socks5-tunnel/releases/download/2.19.2/hev-socks5-tunnel-linux-arm32hf
 tunnel_sha256=e79dce9615cf71c19dcc5d4930c34576169575ea4c33b3823d68f90eea176106
